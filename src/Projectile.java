@@ -15,12 +15,14 @@ public class Projectile extends StackPane {
     private int Speed;
     private double Angle;
     private int Damage;
-    private static final int MaxRadiusBonus = 50;
-    private static final int MinRadius = 25;
+    private static final int MaxRadiusBonus = 40;
+    private static final int MinRadius = 20;
     private static final int MaxSpeedBonus = 150;
     private static final int MinSpeed = 50;
-    private static final int MaxDamageBonus = 38;
-    private static final int MinDamage = 12;
+    private static final int MaxDamageBonus = 58;
+    private static final int MinDamage = 15;
+    public static final long maxChargeTime = 1000L;
+    public static final long minChargeTime = 250L;
     private ImageView Fire1;
     private ImageView Fire2;
     private int Cycles = 0;
@@ -34,9 +36,9 @@ public class Projectile extends StackPane {
         }
 
         this.setTranslateY(Y);
-        this.Radius = 25 + Math.round((float)(50 * timeCharged) / 2500.0F);
-        this.Speed = 50 + Math.round((float)(150 * timeCharged) / 2500.0F);
-        this.Damage = 12 + Math.round((float)(38 * timeCharged) / 2500.0F);
+        this.Radius = MinRadius + Math.round((float)(MaxRadiusBonus * timeCharged) / maxChargeTime);
+        this.Speed = MinSpeed + Math.round((float)(MaxSpeedBonus * timeCharged) / maxChargeTime);
+        this.Damage = MinDamage + Math.round((float)(MaxDamageBonus * timeCharged) / maxChargeTime);
         this.Angle = angle;
 
         this.setTranslateX(X);
@@ -54,8 +56,8 @@ public class Projectile extends StackPane {
                 this.Fire1.setRotate((Math.toDegrees(Angle)-90));
 
 
-                this.Fire1.setScaleY(Game.getScale() + Game.getScale()*(timeCharged / 3500d));
-                this.Fire1.setScaleX(Game.getScale() + Game.getScale()*(timeCharged / 3500d));
+                this.Fire1.setScaleY(Game.getScale() + Game.getScale()*(timeCharged / maxChargeTime));
+                this.Fire1.setScaleX(Game.getScale() + Game.getScale()*(timeCharged / maxChargeTime));
                 this.getChildren().add(this.Fire1);
             } catch (Throwable var37) {
                 var9 = var37;
@@ -88,8 +90,8 @@ public class Projectile extends StackPane {
                 this.Fire2.setRotate(Math.toDegrees(Angle)-90);
 
 
-                this.Fire2.setScaleY(Game.getScale() + Game.getScale()*(timeCharged / 3500d));
-                this.Fire2.setScaleX(Game.getScale() + Game.getScale()*(timeCharged / 3500d));
+                this.Fire2.setScaleY(Game.getScale() + Game.getScale()*(timeCharged / maxChargeTime));
+                this.Fire2.setScaleX(Game.getScale() + Game.getScale()*(timeCharged / maxChargeTime));
                 this.getChildren().add(this.Fire2);
                 this.Fire2.setVisible(false);
             } catch (Throwable var35) {

@@ -2,9 +2,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -26,9 +24,9 @@ public class GraphicsRoot extends StackPane {
     */
     private Stage PrimaryStage;
     private final int UpdateTime = 80;
-    private Player PlayerOne;
+    private static Player PlayerOne;
     //private Player PlayerTwo;
-    private Projectile PlayerOneProjectiles;
+    private static Projectile PlayerOneProjectiles;
     //private Projectile PlayerTwoProjectiles;
     private boolean isGameOver = false;
     private Text gameOverText;
@@ -83,8 +81,26 @@ public class GraphicsRoot extends StackPane {
 
         });
 
+        setOnMouseReleased(event -> {
+            if(event.getButton().equals(MouseButton.PRIMARY))
+                handleClick(false, true);
+            else
+                handleClick(false, false);
+        });
+
+        setOnMousePressed(event -> {
+            if(event.getButton().equals(MouseButton.PRIMARY))
+                handleClick(true, true);
+            else
+                handleClick(true, false);
+        });
+
+
+
         PrimaryStage.show();
         Update();
+
+
     }
 
     public void swapToStartMenu(){
@@ -168,10 +184,10 @@ public class GraphicsRoot extends StackPane {
                         //PlayerTwo.Move();
 
                         if (Cycles % 2 == 0) {
-                            PlayerOne.DecrementStamina(-2, false);
+                            PlayerOne.DecrementStamina(-4, false);
                             //PlayerTwo.DecrementStamina(-2, false);
                         } else {
-                            PlayerOne.DecrementStamina(-1, false);
+                            PlayerOne.DecrementStamina(-2, false);
                             //PlayerTwo.DecrementStamina(-1, false);
                         }
                     }
@@ -213,7 +229,6 @@ public class GraphicsRoot extends StackPane {
                     break;
                 }
                 case DIGIT1: {
-                    PlayerOne.setCharge();
                     break;
                 }
                 case BACK_QUOTE: {
@@ -255,25 +270,11 @@ public class GraphicsRoot extends StackPane {
                     PlayerOne.setInvulnerable(false);
                 }
                 case E: {
-                    long timeSpentCharging = PlayerOne.releaseCharge();
-                    if (timeSpentCharging == -1) {
-                        break;
-                    }
-                    if (PlayerOne.DecrementStamina(Math.round(15 + (timeSpentCharging / 2500f * 80f)), false)) {
-                        PlayerOneProjectiles = new Projectile(calcMouseAngle(), Math.round(timeSpentCharging), PlayerOneProjectiles,
-                                PlayerOne.getTranslateX(), PlayerOne.getTranslateY());
-                    }
+                    Fire();
                     break;
                 }
                 case DIGIT1: {
-                    long timeSpentCharging = PlayerOne.releaseCharge();
-                    if (timeSpentCharging == -1) {
-                        break;
-                    }
-                    if (PlayerOne.DecrementStamina(Math.round(15 + (timeSpentCharging / 2500f * 80f)), false)) {
-                        PlayerOneProjectiles = new Projectile(calcMouseAngle(), Math.round(timeSpentCharging), PlayerOneProjectiles,
-                                PlayerOne.getTranslateX(), PlayerOne.getTranslateY());
-                    }
+                    new MoveTest(1000);
                     break;
                 }
                 case ESCAPE: {
@@ -287,6 +288,20 @@ public class GraphicsRoot extends StackPane {
             }
             if (event.getCode() == KeyCode.ENTER) {
                 //swapToHighScoreScreen();
+            }
+        }
+    }
+
+    public void handleClick(boolean isDown, boolean isPrimary){
+        if (!isGameOver && Mode == 1) {
+            if(!isDown && isPrimary) {
+                Fire();
+            } else if(isDown && isPrimary) {
+                PlayerOne.setCharge();
+            } else if(isDown && !isPrimary){
+                //presently does nothing
+            } else if(!isDown && !isPrimary){
+                PlayerOne.applyMovementVector(3, calcMouseAngle());
             }
         }
     }
@@ -307,4 +322,30 @@ public class GraphicsRoot extends StackPane {
             returnval += Math.PI;
         return returnval + Math.atan(xdif/ydif);
     }
+
+    private void Fire() {
+        long timeSpentCharging = PlayerOne.releaseCharge();
+        if (timeSpentCharging == -1) {
+            return;
+        }
+        if (PlayerOne.DecrementStamina(Math.round(15 + (timeSpentCharging / Projectile.maxChargeTime * 80f)), false)) {
+            double Angle = calcMouseAngle();
+            PlayerOneProjectiles = new Projectile(Angle, Math.round(timeSpentCharging), PlayerOneProjectiles, PlayerOne.getTranslateX(), PlayerOne.getTranslateY());
+            if(timeSpentCharging == Projectile.maxChargeTime)
+                PlayerOne.applyMovementVector(2, Angle +  Math.PI);
+        }
+    }
+
+    public static Player getPlayer(){
+        return PlayerOne;
+    }
+
+    public static Projectile getPlayerOneProjectiles(){
+        return PlayerOneProjectiles;
+    }
+
+    public static void setPlayerOneProjectiles(Projectile toSet){
+        PlayerOneProjectiles = toSet;
+    }
+
 }

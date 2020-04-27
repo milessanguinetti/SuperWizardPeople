@@ -32,13 +32,13 @@ public class Player extends StackPane {
     private ImageView block;
     private ImageView fire;
     private ImageView neutral;
-    private static final int Speed = 25;
     private static final long FireCoolDown = 300L;
-    private static final long MaxChargeTime = 2500L;
-    public static final int Radius = 50;
-    public static final long MinChargeTime = 500L;
     private boolean Grounded = false;
     final private double Gravity = .6;
+    final private double Friction = .8;
+    private boolean isRunning = false;
+    private boolean runningRight = true;
+    private final double baseRunSpeed = 1.5;
 
     public Player() {
         this.Facing = -1;
@@ -180,31 +180,43 @@ public class Player extends StackPane {
     }
 
     public void PressXKey(int key) {
-        this.XMovement = key;
+        if(Grounded)
+            this.XMovement = key*baseRunSpeed;
+        this.isRunning = true;
+        if(key > 0)
+            runningRight = true;
+        else
+            runningRight = false;
     }
 
+
     public void ReleaseXKey(int key) {
-        if (key == this.XMovement) {
-            this.XMovement = 0;
+        if (key > 0 && runningRight) {
+            //if(Grounded)
+            //    this.XMovement = 0;
+            this.isRunning = false;
+        }else if (key < 0 && !runningRight){
+            //if(Grounded)
+            //    this.XMovement = 0;
+            this.isRunning = false;
         }
 
     }
 
     public void PressYKey(int key) {
-        if(key > 0){
-            if(this.YMovement < 0)
-                this.YMovement = 0;
-            this.YMovement += .5;
-        }
-        else if(Grounded)
-            this.YMovement = -3.5;
-        //System.out.println(Grounded + "..." + this.getTranslateY()+ "..." + key + "..." + this.YMovement);
+
     }
 
     public void ReleaseYKey(int key) {
-        //if (key == this.YMovement) {
-        //    this.YMovement = 0;
-        //}
+        if(key > 0){
+            if(this.YMovement < 0)
+                this.YMovement = 0;
+            this.YMovement += 2      ;
+        }
+        else if(Grounded) {
+            this.YMovement = -3.5;
+        }
+        //System.out.println(Grounded + "..." + this.getTranslateY()+ "..." + key + "..." + this.YMovement);
     }
 
     public void endMovement() {
@@ -213,17 +225,35 @@ public class Player extends StackPane {
     }
 
     public void Move() {
-        if(this.XMovement != 0) {
-            if (this.Facing == 1 && this.XMovement < 0) {
-                this.neutral.setRotate(-90D);
-                this.block.setRotate(-90D);
-                this.fire.setRotate(-90D);
-            } else if (this.Facing == -1 && this.XMovement > 0) {
-                this.neutral.setRotate(90D);
-                this.block.setRotate(90D);
-                this.fire.setRotate(90D);
+        //System.out.println(Game.getScreenHeight()/2.0D - 130.0D+"..."+this.getTranslateY());
+        if(this.getTranslateY() == Game.getScreenHeight() / 2.0D - 40.0D) {
+            Grounded = true;
+            if(isRunning && XMovement < baseRunSpeed && XMovement > baseRunSpeed*-1){
+                if(runningRight)
+                    XMovement = baseRunSpeed;
+                else
+                    XMovement = baseRunSpeed*-1;
             }
-            this.Facing = (int) this.XMovement / (int)Math.abs(this.XMovement);
+            if(YMovement > 0)
+                YMovement = 0;
+        }
+        else
+            Grounded = false;
+
+        if(this.XMovement != 0) {
+            //System.out.println(this.Facing +"/"+ this.XMovement);
+            if(Grounded && isRunning) {
+                if (this.Facing == 1 && this.XMovement < 0) {
+                    this.neutral.setRotate(-90D);
+                    this.block.setRotate(-90D);
+                    this.fire.setRotate(-90D);
+                } else if (this.Facing == -1 && this.XMovement > 0) {
+                    this.neutral.setRotate(90D);
+                    this.block.setRotate(90D);
+                    this.fire.setRotate(90D);
+                }
+                this.Facing = (int) (this.XMovement / Math.abs(this.XMovement));
+            }
 
             //System.out.println(this.Facing + "..." + this.XMovement);
 
@@ -231,17 +261,12 @@ public class Player extends StackPane {
                 this.setTranslateX(this.getTranslateX() + (double) (25 * this.XMovement));
             }
         }
-        //System.out.println(Game.getScreenHeight()/2.0D - 130.0D+"..."+this.getTranslateY());
-        if(this.getTranslateY() == Game.getScreenHeight() / 2.0D - 40.0D)
-            Grounded = true;
-        else
-            Grounded = false;
-
         //if (this.getTranslateY() + 25 * this.YMovement < Game.getScreenHeight() / 2.0D - 30.0D && this.getTranslateY() + (25 * this.YMovement) > Game.getScreenHeight() / -2.0D + 130.0D) {
         //    applyGravity();
         //    this.setTranslateY(Math.min(this.getTranslateY() + 25 * this.YMovement, Game.getScreenHeight() / -2.0D + 130.0D));
         //}
         applyGravity();
+        chargeIndication();
         if(YMovement > 0)
             this.setTranslateY(Math.min(this.getTranslateY()+25*this.YMovement, Game.getScreenHeight()/2-40));
         if(YMovement < 0 )
@@ -252,7 +277,35 @@ public class Player extends StackPane {
     private void applyGravity(){
         if(!Grounded && this.YMovement < 5){
             this.YMovement = this.YMovement + Gravity;
+        }else if(Grounded && this.XMovement != 0){
+            double speedFloor = 0;
+            if(isRunning)
+                speedFloor = baseRunSpeed;
+            if(this.XMovement < 0){
+                this.XMovement = Math.min(this.XMovement + Friction, speedFloor*-1);
+                if(runningRight && this.XMovement == speedFloor*-1)
+                    this.XMovement = speedFloor;
+            }else{
+                this.XMovement = Math.max(this.XMovement - Friction, speedFloor);
+                if(!runningRight && this.XMovement == speedFloor)
+                    this.XMovement = speedFloor*-1;
+            }
         }
+    }
+
+    private void chargeIndication(){
+        if(Charging){
+            if(System.currentTimeMillis() - this.startedCharging > Projectile.maxChargeTime)
+                this.addTempColor(1, 300);
+        }
+    }
+
+    public void applyMovementVector(double magnitude, double direction){
+        //System.out.println("before:"+this.Grounded+"..."+this.YMovement);
+        //System.out.println(Math.cos(direction) +"/"+ Math.sin(direction));
+        this.XMovement += magnitude*Math.cos(direction);
+        this.YMovement += magnitude*Math.sin(direction);
+        //System.out.println("after:"+this.Grounded+"..."+this.YMovement);
     }
 
     public void Damage(int damage) {
@@ -352,12 +405,12 @@ public class Player extends StackPane {
     public long releaseCharge() {
         if (this.Charging && !this.Invincible) {
             long timeSpentCharging = System.currentTimeMillis() - this.startedCharging;
-            if (timeSpentCharging < 500L) {
+            if (timeSpentCharging < Projectile.minChargeTime) {
                 timeSpentCharging = 0L;
             }
 
-            if (timeSpentCharging > 2500L) {
-                timeSpentCharging = 2500L;
+            if (timeSpentCharging > Projectile.maxChargeTime) {
+                timeSpentCharging = Projectile.maxChargeTime;
             }
 
             this.Charging = false;
@@ -395,7 +448,6 @@ public class Player extends StackPane {
         } else {
             this.Adjust.setHue(toSet);
         }
-
     }
 
     public boolean isDead() {
