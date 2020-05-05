@@ -29,15 +29,13 @@ public class GameplayEntity extends StackPane {
     }
 
     public double checkXCollision(GameplayEntity toCheck, double movement) {
-        //System.out.println("*"+(this.getAbsX()-this.halfWidth)+"/"+(this.getAbsX()+this.halfWidth));
-        //System.out.println((toCheck.getAbsX()-toCheck.halfWidth)+"/"+(toCheck.getAbsX()+toCheck.halfWidth));
         double retval = this.getAbsX() - toCheck.getAbsX();
         if (movement == 0){
             if(retval < 0){
-                if (retval + (this.halfWidth + toCheck.halfWidth) < 0)
+                if (retval + (this.halfWidth + toCheck.halfWidth) <= 0)
                     return 0; //no existing overlap
             }else if(retval > 0){
-                if(retval - (this.halfWidth + toCheck.halfWidth) > 0)
+                if(retval - (this.halfWidth + toCheck.halfWidth) >= 0)
                     return 0; //no existing overlap
             }
             return -1; //movement is valid, but objects overlap
@@ -69,10 +67,10 @@ public class GameplayEntity extends StackPane {
         double retval = this.getAbsY() - toCheck.getAbsY();
         if (movement == 0){ //if there's no movement
             if(retval < 0){
-                if (retval + this.halfHeight + toCheck.halfHeight < 0)
+                if (retval + this.halfHeight + toCheck.halfHeight <= 0)
                     return 0; //no existing overlap
             }else if(retval > 0){
-                if(retval - (this.halfHeight + toCheck.halfHeight) > 0)
+                if(retval - (this.halfHeight + toCheck.halfHeight) >= 0)
                     return 0; //no existing overlap
             }
             return -1; //movement is valid, but objects overlap
@@ -86,6 +84,7 @@ public class GameplayEntity extends StackPane {
             retval -= (this.halfHeight + toCheck.halfHeight); //factor in entity breadth
             if(retval < 0) //no movement possible if dimensions overlap
                 return 0;
+
             return Math.min(retval, movement);
         }else{
             if(retval > 0) {
@@ -100,6 +99,18 @@ public class GameplayEntity extends StackPane {
         }
     }
 
+    public boolean checkOnTop(GameplayEntity toCheck) {
+        double dif = this.getAbsY() - toCheck.getAbsY();
+        if (dif < 0) {
+            if (dif + this.halfHeight + toCheck.halfHeight == 0)
+                return true;
+        } else if (dif > 0) {
+            if (dif - (this.halfHeight + toCheck.halfHeight) == 0)
+                return true; //no existing overlap
+        }
+        return false;
+    }
+
     public double [] checkCollision(GameplayEntity toCheck, double xmove, double ymove){
         double [] retval = new double[2]; //return value is a pair of maximum possible movement values
         retval[0] = xmove;
@@ -107,15 +118,15 @@ public class GameplayEntity extends StackPane {
         double xpossible, ypossible; //vars for possible movement per each entity in list
         GameplayEntity current = this;
         while(current != null){
-            xpossible = checkXCollision(toCheck, retval[0]);
-            ypossible = checkYCollision(toCheck, retval[1]);
+            xpossible = current.checkXCollision(toCheck, retval[0]);
+            ypossible = current.checkYCollision(toCheck, retval[1]);
             if(xpossible != retval[0] && ypossible != retval[1]){
-                if(retval[0] != 0) { //0 movement will stay 0 movement
+                if(retval[0] != 0 &&!current.checkOnTop(toCheck)) { //0 movement will stay 0 movement
                     if (retval[0] < 0) { //negative movement cases
                         if (!(xpossible > 0)) //positive values for negative movement imply valid overlap; skip
                             retval[0] = Math.max(retval[0], xpossible); //otherwise, find the value closest to 0
                     } else { //positive movement cases
-                        if(!(xpossible < 0)) //negative values for positive movement imply valid overlap; skip
+                        if (!(xpossible < 0)) //negative values for positive movement imply valid overlap; skip
                             retval[0] = Math.min(retval[0], xpossible); //otherwise, find the value closest to 0
                     }
                 }
@@ -124,12 +135,12 @@ public class GameplayEntity extends StackPane {
                         if (!(ypossible > 0)) //positive values for negative movement imply valid overlap; skip
                             retval[1] = Math.max(retval[1], ypossible); //otherwise, find the value closest to 0
                     } else { //positive movement cases
-                        if(!(ypossible < 0)) //negative values for positive movement imply valid overlap; skip
+                        if (!(ypossible < 0)) //negative values for positive movement imply valid overlap; skip
                             retval[1] = Math.min(retval[1], ypossible); //otherwise, find the value closest to 0
                     }
                 }
             }
-            current = this.Next;
+            current = current.Next;
         }
         return retval;
     }

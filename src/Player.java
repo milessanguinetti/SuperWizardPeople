@@ -34,7 +34,7 @@ public class Player extends GameplayEntity {
     private ImageView neutral;
     private static final long FireCoolDown = 300L;
     private boolean Grounded = false;
-    final private double Gravity = .4;
+    final private double Gravity = .35;
     final private double Friction = .8;
     final private int pixelScale = 10;
     private boolean isRunning = false;
@@ -43,7 +43,7 @@ public class Player extends GameplayEntity {
     private final double baseJumpSpeed = -4.5;
 
     public Player() {
-        super(50, 50, null, null);
+        super(35, 35, null, null);
         this.Facing = -1;
 
         //this.setTranslateY(-100.0D);
@@ -313,15 +313,16 @@ public class Player extends GameplayEntity {
                 this.Facing = (int) (this.XMovement / Math.abs(this.XMovement));
             }
         }
-        applyGravity();
-        chargeIndication();
 
-        //System.out.println("Calling collision check");
+
         double [] maxMovement
                 = gameStage.getCurrentGameStage().getEntityList().checkCollision(this,
                 XMovement*pixelScale, YMovement*pixelScale);
+        //System.out.println("*"+XMovement+"/"+YMovement);
         XMovement = maxMovement[0]/pixelScale;
         YMovement = maxMovement[1]/pixelScale;
+        //System.out.println("*"+YMovement+"/"+YMovement);
+
         if(YMovement == 0)
             Grounded = true;
         if (GraphicsRoot.getGameplayY() == Game.getScreenHeight() / 2.0D - 40.0D && YMovement > 0) {
@@ -339,7 +340,8 @@ public class Player extends GameplayEntity {
         if (YMovement < 0)
             GraphicsRoot.translateGameplayPaneY(Math.max(GraphicsRoot.getGameplayY() + pixelScale * this.YMovement, Game.getScreenHeight() / -2 + 130));
                 //em.out.println(Grounded + "..." + this.getTranslateY() + "..." + YMovement);
-
+        applyGravity();
+        chargeIndication();
         }
 
     private void applyGravity(){

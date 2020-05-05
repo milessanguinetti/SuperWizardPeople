@@ -70,8 +70,8 @@ public class gameStage extends StackPane {
     }
 
     public void addEntity(GameplayEntity toAdd){
-        toAdd.setNext(entityList);
-        entityList = toAdd;
+        toAdd.setNext(currentGameStage.entityList);
+        currentGameStage.entityList = toAdd;
         GraphicsRoot.getGamePlayPane().getChildren().add(toAdd);
     }
 

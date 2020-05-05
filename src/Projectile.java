@@ -16,10 +16,10 @@ public class Projectile extends StackPane {
     private int Speed;
     private double Angle;
     private int Damage;
-    private static final int MaxRadiusBonus = 40;
+    private static final int MaxRadiusBonus = 50;
     private static final int MinRadius = 20;
-    private static final int MaxSpeedBonus = 150;
-    private static final int MinSpeed = 50;
+    private static final int MaxSpeedBonus = -22;
+    private static final int MinSpeed = 40;
     private static final int MaxDamageBonus = 58;
     private static final int MinDamage = 15;
     public static final long maxChargeTime = 500L;

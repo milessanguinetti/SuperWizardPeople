@@ -2,6 +2,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.input.*;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -75,14 +76,25 @@ public class GraphicsRoot extends StackPane {
         //TEST
         gameStage.setCurrentGameStage(new gameStage("background"));
         gamePlayPane.getChildren().add(gameStage.getCurrentGameStage());
-        double testTangleX = 50;
-        double testTangleY = 400;
+        double testTangleX = 200;
+        double testTangleY   = 250;
         GameplayEntity testTangle = new GameplayEntity(testTangleX, testTangleY, null, null);
         gameStage.getCurrentGameStage().addEntity(testTangle);
-        testTangle.setTranslateX(100);
+        testTangle.setTranslateX(300);
+        testTangle.setTranslateY(50);
         Rectangle testShape = new Rectangle(testTangleX, testTangleY);
         testShape.setFill(Color.BLACK);
         testTangle.addNode(testShape);
+
+        double testTangleX2 = 300;
+        double testTangleY2   = 150;
+        GameplayEntity testTangle2 = new GameplayEntity(testTangleX2, testTangleY2, null, null);
+        gameStage.getCurrentGameStage().addEntity(testTangle2);
+        testTangle2.setTranslateX(-300);
+        testTangle2.setTranslateY(50);
+        Rectangle testShape2 = new Rectangle(testTangleX2, testTangleY2);
+        testShape2.setFill(Color.MAGENTA);
+        testTangle2.addNode(testShape2);
         //TEST
 
         setOnKeyPressed(event -> {
@@ -326,7 +338,8 @@ public class GraphicsRoot extends StackPane {
             } else if(isDown && !isPrimary){
                 //presently does nothing
             } else if(!isDown && !isPrimary){
-                PlayerOne.applyMovementVector(3, calcMouseAngle());
+                PlayerOne.endMovement();
+                PlayerOne.applyMovementVector(5, calcMouseAngle());
             }
         }
     }
