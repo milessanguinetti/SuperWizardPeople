@@ -2,6 +2,7 @@ import com.sun.javafx.scene.traversal.Direction;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import javafx.scene.media.MediaPlayer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,18 +22,26 @@ public class Projectile extends StackPane {
     private static final int MinSpeed = 50;
     private static final int MaxDamageBonus = 58;
     private static final int MinDamage = 15;
-    public static final long maxChargeTime = 1000L;
+    public static final long maxChargeTime = 500L;
     public static final long minChargeTime = 250L;
     private ImageView Fire1;
     private ImageView Fire2;
     private int Cycles = 0;
+    private static final int soundEffectCooldown = 150;
+    private static long lastSoundEffect;
+
 
     public Projectile(double angle, int timeCharged, Projectile next, double X, double Y) {
         //System.out.println(angle);
-        if ((long)timeCharged <= 500L) {
-            Game.playMedia("DefaultFire");
-        } else {
-            Game.playMedia("ChargeFire");
+        long time = System.currentTimeMillis();
+        //System.out.println(time +"..."+ soundEffectCooldown +"..."+lastSoundEffect);
+        if(time - soundEffectCooldown > lastSoundEffect) {
+            lastSoundEffect = time;
+            if ((long) timeCharged <= 500L) {
+                Game.playMedia("DefaultFire");
+            } else {
+                Game.playMedia("ChargeFire");
+            }
         }
 
         this.setTranslateY(Y);
@@ -116,7 +125,7 @@ public class Projectile extends StackPane {
             System.out.println("Error loading projectile sprite.");
         }
 
-        Game.getGraphicsRoot().getChildren().add(this);
+        GraphicsRoot.getGamePlayPane().getChildren().add(this);
         if (this.Next != null) {
             this.Next.setPrevious(this);
         }
@@ -124,7 +133,7 @@ public class Projectile extends StackPane {
     }
 
     public void Remove() {
-        Game.getGraphicsRoot().getChildren().remove(this);
+        GraphicsRoot.getGamePlayPane().getChildren().remove(this);
         if (this.Next != null) {
             this.Next.setPrevious(this.Previous);
         }
@@ -132,6 +141,9 @@ public class Projectile extends StackPane {
     }
 
     public Projectile moveAndCheckForHit(Player Enemy) {
+        double absX = this.getTranslateX() + this.getParent().getTranslateX();
+        double absY = this.getTranslateY() + this.getParent().getTranslateY();
+
         this.setTranslateX(this.getTranslateX() + this.Speed * cos(this.Angle));
         this.setTranslateY(this.getTranslateY() + this.Speed * sin(this.Angle));
         if ((this.Cycles + 1) % 4 == 0) {
@@ -161,7 +173,8 @@ public class Projectile extends StackPane {
             Enemy.Damage(this.Damage);
             this.Damage = 0;
             return this;
-        } else if (this.getTranslateX() <= Game.getScreenWidth() / 2.0D + 300.0D && this.getTranslateX() >= Game.getScreenWidth() / -2.0D - 300.0D) {
+        } else if (absX <= Game.getScreenWidth() / 2.0D + 300.0D && absX >= Game.getScreenWidth() / -2.0D - 300.0D
+        && absY <= Game.getScreenHeight() / 2.0D + 300.0D && absY >= Game.getScreenHeight() / -2.0D - 300.0D) {
             return this;
         } else {
             this.Remove();

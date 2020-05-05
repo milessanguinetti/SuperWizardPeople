@@ -15,6 +15,8 @@ import java.awt.*;
 
 public class GraphicsRoot extends StackPane {
     private static StackPane gameRootPane;
+    private static StackPane gamePlayPane; //pane for all gameplay elements except player
+    private static StackPane playerPane; //pane strictly for player sprite
     private static SplashScreen splashscreen;
     private int Mode = 0;
     /*
@@ -23,7 +25,7 @@ public class GraphicsRoot extends StackPane {
         2 = high score screen
     */
     private Stage PrimaryStage;
-    private final int UpdateTime = 80;
+    private final int UpdateTime = 40;
     private static Player PlayerOne;
     //private Player PlayerTwo;
     private static Projectile PlayerOneProjectiles;
@@ -39,6 +41,12 @@ public class GraphicsRoot extends StackPane {
         if(gameRootPane == null){
             gameRootPane = new StackPane();
             gameRootPane.setAlignment(Pos.CENTER);
+            playerPane = new StackPane();
+            playerPane.setAlignment(Pos.CENTER);
+            gamePlayPane = new StackPane();
+            gamePlayPane.setAlignment(Pos.CENTER);
+            gameRootPane.getChildren().add(gamePlayPane);
+            gameRootPane.getChildren().add(playerPane);
             splashscreen = new SplashScreen();
             swapToStartMenu();
             PrimaryStage.setScene(new Scene(this));
@@ -56,16 +64,31 @@ public class GraphicsRoot extends StackPane {
 
         Rectangle background = new Rectangle(Game.getScreenWidth(), Game.getScreenHeight() + 100);
         background.setFill(Color.BLACK);
+
         PrimaryStage.setTitle("Turtle Fire");
         PrimaryStage.setFullScreen(true);
         PrimaryStage.setResizable(false);
         PrimaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         setAlignment(Pos.CENTER);
         gameRootPane.getChildren().add(background);
+        background.toBack();
+        //TEST
+        gameStage.setCurrentGameStage(new gameStage("background"));
+        gamePlayPane.getChildren().add(gameStage.getCurrentGameStage());
+        double testTangleX = 50;
+        double testTangleY = 400;
+        GameplayEntity testTangle = new GameplayEntity(testTangleX, testTangleY, null, null);
+        gameStage.getCurrentGameStage().addEntity(testTangle);
+        testTangle.setTranslateX(100);
+        Rectangle testShape = new Rectangle(testTangleX, testTangleY);
+        testShape.setFill(Color.BLACK);
+        testTangle.addNode(testShape);
+        //TEST
 
         setOnKeyPressed(event -> {
             if(Mode == 1)
                 handlePress(event);
+            event.consume();
         });
 
         setOnKeyReleased(event1 -> {
@@ -78,7 +101,7 @@ public class GraphicsRoot extends StackPane {
             else if(Mode == 2){
 
             }
-
+            event1.consume();
         });
 
         setOnMouseReleased(event -> {
@@ -86,6 +109,7 @@ public class GraphicsRoot extends StackPane {
                 handleClick(false, true);
             else
                 handleClick(false, false);
+            event.consume();
         });
 
         setOnMousePressed(event -> {
@@ -93,6 +117,7 @@ public class GraphicsRoot extends StackPane {
                 handleClick(true, true);
             else
                 handleClick(true, false);
+            event.consume();
         });
 
 
@@ -328,9 +353,11 @@ public class GraphicsRoot extends StackPane {
         if (timeSpentCharging == -1) {
             return;
         }
-        if (PlayerOne.DecrementStamina(Math.round(15 + (timeSpentCharging / Projectile.maxChargeTime * 80f)), false)) {
+        if (PlayerOne.DecrementStamina(Math.round(15 + (timeSpentCharging / Projectile.maxChargeTime * 80f)),
+                false)) {
             double Angle = calcMouseAngle();
-            PlayerOneProjectiles = new Projectile(Angle, Math.round(timeSpentCharging), PlayerOneProjectiles, PlayerOne.getTranslateX(), PlayerOne.getTranslateY());
+            PlayerOneProjectiles = new Projectile(Angle, Math.round(timeSpentCharging), PlayerOneProjectiles,
+                    gamePlayPane.getTranslateX()*-1, gamePlayPane.getTranslateY()*-1);
             if(timeSpentCharging == Projectile.maxChargeTime)
                 PlayerOne.applyMovementVector(2, Angle +  Math.PI);
         }
@@ -348,4 +375,27 @@ public class GraphicsRoot extends StackPane {
         PlayerOneProjectiles = toSet;
     }
 
+    public static void translateGameplayPaneX(double x){
+        gamePlayPane.setTranslateX(x*-1);
+    }
+
+    public static void translateGameplayPaneY(double y){
+        gamePlayPane.setTranslateY(y*-1);
+    }
+
+    public static double getGameplayX(){
+        return gamePlayPane.getTranslateX()*-1;
+    }
+
+    public static double getGameplayY(){
+        return gamePlayPane.getTranslateY()*-1;
+    }
+
+    public static StackPane getGamePlayPane(){
+        return gamePlayPane;
+    }
+
+    public static StackPane getPlayerPane(){
+        return playerPane;
+    }
 }

@@ -6,7 +6,9 @@ import javafx.stage.Stage;
 
 public class Game {
     private static GraphicsRoot graphicsRoot;
-    private static MediaPlayer mediaPlayer; //plays any music that we might need
+    private static MediaPlayer musicPlayer; //plays any music that we might need
+    private static MediaPlayer stoppablePlayer; //player for effects that occur often enough
+                                                //to require stopping in the interest of performance
     private static Game currentGame; //a static reference to the current game.
     private static double ScreenWidth;
     private static double ScreenHeight;
@@ -41,14 +43,28 @@ public class Game {
         tempplayer.play();
     }
 
+    public static void playStoppableMedia(String toPlay){
+        if(stoppablePlayer != null){
+            stoppablePlayer.stop();
+            stoppablePlayer.dispose();
+        }
+        Media media = new Media(currentGame.getClass().getResource("AudioFiles/"
+                + toPlay + "!.mp3").toExternalForm());
+        stoppablePlayer = new MediaPlayer(media);
+        stoppablePlayer.setCycleCount(1); //repeat indefinitely
+        stoppablePlayer.play();
+    }
+
     public static void playMusic(String toPlay){
-        if (mediaPlayer != null)
-            mediaPlayer.stop();
+        if (musicPlayer != null) {
+            musicPlayer.stop();
+            musicPlayer.dispose();
+        }
         //mediaPlayer = new MediaPlayer(new Media(currentGame.getClass().getResource(toPlay + ".mp3").toString()));
         Media media = new Media(currentGame.getClass().getResource(toPlay).toExternalForm());
-        mediaPlayer = new MediaPlayer(media);
-        mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE); //repeat indefinitely
-        mediaPlayer.play();
+        musicPlayer = new MediaPlayer(media);
+        musicPlayer.setCycleCount(MediaPlayer.INDEFINITE); //repeat indefinitely
+        musicPlayer.play();
     }
 
     public static GraphicsRoot getGraphicsRoot(){

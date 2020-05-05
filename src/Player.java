@@ -16,7 +16,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class Player extends StackPane {
+public class Player extends GameplayEntity {
     private int Health = 100;
     private int Stamina = 100;
     private double YMovement = 0;
@@ -34,17 +34,20 @@ public class Player extends StackPane {
     private ImageView neutral;
     private static final long FireCoolDown = 300L;
     private boolean Grounded = false;
-    final private double Gravity = .6;
+    final private double Gravity = .4;
     final private double Friction = .8;
+    final private int pixelScale = 10;
     private boolean isRunning = false;
     private boolean runningRight = true;
-    private final double baseRunSpeed = 1.5;
+    private final double baseRunSpeed = 3.5;
+    private final double baseJumpSpeed = -4.5;
 
     public Player() {
+        super(50, 50, null, null);
         this.Facing = -1;
 
-        this.setTranslateY(-100.0D);
-        this.setTranslateX((double)this.Facing * (Game.getScreenWidth() / 2.0D - 100.0D));
+        //this.setTranslateY(-100.0D);
+        //this.setTranslateX((double)this.Facing * (Game.getScreenWidth() / 2.0D - 100.0D));
         this.setAlignment(Pos.CENTER);
         String spriteColor = new String();
         int whichCharacter = 1;
@@ -172,11 +175,12 @@ public class Player extends StackPane {
         this.HPBar = new Bar(Color.RED, "HP", this.Facing);
         this.HPBar.setTranslateX((double)this.Facing * Game.getScreenWidth() / 3.0D);
         this.HPBar.setTranslateY(Game.getScreenHeight() / -2.0D + 30.0D);
-        Game.getGraphicsRoot().getRootChildren().add(this.HPBar);
+        Game.getGraphicsRoot().getPlayerPane().getChildren().add(this.HPBar);
         this.StaminaBar = new Bar(Color.DARKBLUE, "MP", this.Facing);
         this.StaminaBar.setTranslateX((double)this.Facing * Game.getScreenWidth() / 3.0D);
         this.StaminaBar.setTranslateY(Game.getScreenHeight() / -2.0D + 80.0D);
-        Game.getGraphicsRoot().getRootChildren().add(this.StaminaBar);
+        Game.getGraphicsRoot().getPlayerPane().getChildren().add(this.StaminaBar);
+
     }
 
     public void PressXKey(int key) {
@@ -214,7 +218,7 @@ public class Player extends StackPane {
             this.YMovement += 2      ;
         }
         else if(Grounded) {
-            this.YMovement = -3.5;
+            this.YMovement = baseJumpSpeed;
         }
         //System.out.println(Grounded + "..." + this.getTranslateY()+ "..." + key + "..." + this.YMovement);
     }
@@ -224,9 +228,13 @@ public class Player extends StackPane {
         this.XMovement = 0;
     }
 
-    public void Move() {
+    /*public void Move() {
         //System.out.println(Game.getScreenHeight()/2.0D - 130.0D+"..."+this.getTranslateY());
-        if(this.getTranslateY() == Game.getScreenHeight() / 2.0D - 40.0D) {
+        double yColl = gameStage.getCurrentGameStage().getEntityList().recursivelyCheckYCollision(this, 0);
+        double xColl = gameStage.getCurrentGameStage().getEntityList().recursivelyCheckXCollision(this, 0);
+        if(xColl != 0 && yColl != 0)
+            System.out.println(yColl + "/"+ xColl);
+        if(GraphicsRoot.getGameplayY() == Game.getScreenHeight() / 2.0D - 40.0D || (yColl < 0 && xColl != 0)) {
             Grounded = true;
             if(isRunning && XMovement < baseRunSpeed && XMovement > baseRunSpeed*-1){
                 if(runningRight)
@@ -239,7 +247,6 @@ public class Player extends StackPane {
         }
         else
             Grounded = false;
-
         if(this.XMovement != 0) {
             //System.out.println(this.Facing +"/"+ this.XMovement);
             if(Grounded && isRunning) {
@@ -256,28 +263,90 @@ public class Player extends StackPane {
             }
 
             //System.out.println(this.Facing + "..." + this.XMovement);
+            if(xColl > 0 && XMovement > 0 && yColl != 0){
+                XMovement = 0;
+            }
+            if(xColl < 0 && XMovement < 0 && yColl != 0){
+                XMovement = 0;
+            }
 
-            if (this.getTranslateX() + 25 * this.XMovement < Game.getScreenWidth() / 2.0D - 50.0D && this.getTranslateX() + (double) (25 * this.XMovement) > -Game.getScreenWidth() / 2.0D + 50.0D) {
-                this.setTranslateX(this.getTranslateX() + (double) (25 * this.XMovement));
+            if (GraphicsRoot.getGameplayX() + 25 * this.XMovement < Game.getScreenWidth() / 2.0D - 50.0D && GraphicsRoot.getGameplayX() + (double) (25 * this.XMovement) > -Game.getScreenWidth() / 2.0D + 50.0D) {
+                GraphicsRoot.translateGameplayPaneX(GraphicsRoot.getGameplayX() + 25 * this.XMovement);
             }
         }
         //if (this.getTranslateY() + 25 * this.YMovement < Game.getScreenHeight() / 2.0D - 30.0D && this.getTranslateY() + (25 * this.YMovement) > Game.getScreenHeight() / -2.0D + 130.0D) {
         //    applyGravity();
         //    this.setTranslateY(Math.min(this.getTranslateY() + 25 * this.YMovement, Game.getScreenHeight() / -2.0D + 130.0D));
         //}
+        if(yColl > 0 && YMovement > 0 && xColl != 0)
+            YMovement = 0;
+
         applyGravity();
         chargeIndication();
         if(YMovement > 0)
-            this.setTranslateY(Math.min(this.getTranslateY()+25*this.YMovement, Game.getScreenHeight()/2-40));
+            GraphicsRoot.translateGameplayPaneY(Math.min(GraphicsRoot.getGameplayY()+25*this.YMovement, Game.getScreenHeight()/2-40));
         if(YMovement < 0 )
-            this.setTranslateY(Math.max(this.getTranslateY()+25*this.YMovement, Game.getScreenHeight()/-2+130));
+            GraphicsRoot.translateGameplayPaneY(Math.max(GraphicsRoot.getGameplayY()+25*this.YMovement, Game.getScreenHeight()/-2+130));
         //em.out.println(Grounded + "..." + this.getTranslateY() + "..." + YMovement);
-    }
+    }*/
+
+    public void Move() {
+        //System.out.println(Game.getScreenHeight()/2.0D - 130.0D+"..."+this.getTranslateY());
+        if (Grounded && isRunning && XMovement < baseRunSpeed && XMovement > baseRunSpeed * -1) {
+            if (runningRight)
+                XMovement = baseRunSpeed;
+            else
+                XMovement = baseRunSpeed * -1;
+        }
+        if (this.XMovement != 0) {
+            //System.out.println(this.Facing +"/"+ this.XMovement);
+            if (Grounded && isRunning) {
+                if (this.Facing == 1 && this.XMovement < 0) {
+                    this.neutral.setRotate(-90D);
+                    this.block.setRotate(-90D);
+                    this.fire.setRotate(-90D);
+                } else if (this.Facing == -1 && this.XMovement > 0) {
+                    this.neutral.setRotate(90D);
+                    this.block.setRotate(90D);
+                    this.fire.setRotate(90D);
+                }
+                this.Facing = (int) (this.XMovement / Math.abs(this.XMovement));
+            }
+        }
+        applyGravity();
+        chargeIndication();
+
+        //System.out.println("Calling collision check");
+        double [] maxMovement
+                = gameStage.getCurrentGameStage().getEntityList().checkCollision(this,
+                XMovement*pixelScale, YMovement*pixelScale);
+        XMovement = maxMovement[0]/pixelScale;
+        YMovement = maxMovement[1]/pixelScale;
+        if(YMovement == 0)
+            Grounded = true;
+        if (GraphicsRoot.getGameplayY() == Game.getScreenHeight() / 2.0D - 40.0D && YMovement > 0) {
+            Grounded = true;
+            YMovement = 0;
+        }
+        if(YMovement != 0)
+            Grounded = false;
+
+        if (GraphicsRoot.getGameplayX() + pixelScale * this.XMovement < Game.getScreenWidth() / 2.0D - 50.0D && GraphicsRoot.getGameplayX() + (double) (25 * this.XMovement) > -Game.getScreenWidth() / 2.0D + 50.0D)
+            GraphicsRoot.translateGameplayPaneX(GraphicsRoot.getGameplayX() + pixelScale * this.XMovement);
+
+        if (YMovement > 0)
+            GraphicsRoot.translateGameplayPaneY(Math.min(GraphicsRoot.getGameplayY() + pixelScale * this.YMovement, Game.getScreenHeight() / 2 - 40));
+        if (YMovement < 0)
+            GraphicsRoot.translateGameplayPaneY(Math.max(GraphicsRoot.getGameplayY() + pixelScale * this.YMovement, Game.getScreenHeight() / -2 + 130));
+                //em.out.println(Grounded + "..." + this.getTranslateY() + "..." + YMovement);
+
+        }
 
     private void applyGravity(){
-        if(!Grounded && this.YMovement < 5){
-            this.YMovement = this.YMovement + Gravity;
-        }else if(Grounded && this.XMovement != 0){
+        if(this.YMovement < 5){
+            this.YMovement += Gravity;
+        }
+        if(Grounded && this.XMovement != 0){
             double speedFloor = 0;
             if(isRunning)
                 speedFloor = baseRunSpeed;
@@ -455,7 +524,7 @@ public class Player extends StackPane {
     }
 
     public void RemoveFromPane() {
-        ObservableList toRemoveFrom = Game.getGraphicsRoot().getRootChildren();
+        ObservableList toRemoveFrom = Game.getGraphicsRoot().getPlayerPane().getChildren();
         toRemoveFrom.remove(this);
         toRemoveFrom.remove(this.HPBar);
         toRemoveFrom.remove(this.StaminaBar);

@@ -15,7 +15,8 @@ public class MoveTest {
         KeyFrame kf = new KeyFrame(javafx.util.Duration.millis(Duration/Cycles), (ae) -> {
             double Angle = -Ticks*(Math.PI/20);
             Player p = GraphicsRoot.getPlayer();
-            GraphicsRoot.setPlayerOneProjectiles(new Projectile(Angle, 0, GraphicsRoot.getPlayerOneProjectiles(), p.getTranslateX(), p.getTranslateY()));
+            GraphicsRoot.setPlayerOneProjectiles(new Projectile(Angle, 0,
+                    GraphicsRoot.getPlayerOneProjectiles(), GraphicsRoot.getGameplayX(), GraphicsRoot.getGameplayY()));
             ++Ticks;
         }, new KeyValue[0]);
         moveTimeline.getKeyFrames().add(kf);
